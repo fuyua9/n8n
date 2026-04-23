@@ -178,3 +178,5 @@ minimumReleaseAgeExclude:
   - underscore
   - protobufjs
   - follow-redirects
+  # Renovate security update: jws@3@3.2.3
+  - jws@3@3.2.3
