@@ -178,3 +178,5 @@ minimumReleaseAgeExclude:
   - underscore
   - protobufjs
   - follow-redirects
+  # Renovate security update: expr-eval@2.0.2@3.0.1
+  - expr-eval@2.0.2@3.0.1
