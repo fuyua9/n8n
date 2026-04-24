@@ -32,7 +32,7 @@ Generate 5-7 realistic sample rows following the dataset design principles in yo
 		return `Use existing DataTable id: ${input.existingDataTableId}. Do not create a new one.
 Wire the EvaluationTrigger to this DataTable id.`;
 	}
-	return `Do not create a DataTable. Leave the EvaluationTrigger's dataTableId empty — the user will wire it manually later.`;
+	return "Do not create a DataTable. Leave the EvaluationTrigger's dataTableId empty — the user will wire it manually later.";
 }
 
 export function formatEvalSetupTask(input: FormatEvalSetupTaskInput): string {
