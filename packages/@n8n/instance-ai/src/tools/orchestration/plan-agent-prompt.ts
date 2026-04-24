@@ -65,6 +65,7 @@ ${NATIVE_NODE_PREFERENCE}
 
 ## Critical Rules
 
+- **Clean up obsolete workflows on replan.** When revising the plan after a failure, if an earlier task already created a workflow that is no longer part of the new plan, include a \`delegate\` item at the end that calls \`workflows(action="delete", workflowId=...)\` for each obsolete ID. Hard-deletion of agent-created workflows is silent (no user prompt), so cleanup does not add friction. Never emit delete items for workflows the user created — only for workflows created earlier in this same run.
 - **Dependencies are mandatory.** Every workflow must list the data table IDs it reads from or writes to in \`dependsOn\`. If workflow C needs data from A and B, it must depend on both.
 - **No duplicate items.** Each piece of work appears exactly once. Use \`workflow\` kind for workflows, \`data-table\` kind for all data table operations (create, delete, modify, seed), \`research\` kind for web research. Use \`delegate\` only for tasks that don't fit the other kinds — never for data table operations.
 - **Data-table-only plans are valid.** When the request is purely about data tables (no triggers, schedules, or integrations), use only \`data-table\` items — don't wrap them in \`workflow\` or \`delegate\`. For creation, include \`columns\`; for other operations, omit \`columns\` and describe the operation in \`purpose\`. Include seed rows in \`purpose\` when the user wants sample data.

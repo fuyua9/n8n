@@ -265,6 +265,44 @@ describe('workflows tool', () => {
 				reason: 'User denied the action',
 			});
 		});
+
+		it('should hard-delete without suspending when cleaning up a workflow the agent created this run', async () => {
+			const context = createMockContext({
+				aiCreatedWorkflowIds: new Set(['wf1']),
+			});
+			const suspend = jest.fn();
+
+			const tool = createWorkflowsTool(context, 'full');
+			const result = await tool.execute!({ action: 'delete', workflowId: 'wf1' }, {
+				agent: { suspend, resumeData: undefined },
+			} as never);
+
+			expect(suspend).not.toHaveBeenCalled();
+			expect(context.workflowService.delete).toHaveBeenCalledWith('wf1');
+			expect(context.workflowService.archive).not.toHaveBeenCalled();
+			expect(context.aiCreatedWorkflowIds?.has('wf1')).toBe(false);
+			expect(result).toEqual({ success: true });
+		});
+
+		it('should still require confirmation for workflows the agent did not create', async () => {
+			const context = createMockContext({
+				aiCreatedWorkflowIds: new Set(['wf-agent']),
+			});
+			(context.workflowService.get as jest.Mock).mockResolvedValue({
+				id: 'wf-user',
+				name: 'User WF',
+			});
+			const suspend = jest.fn();
+
+			const tool = createWorkflowsTool(context, 'full');
+			await tool.execute!({ action: 'delete', workflowId: 'wf-user' }, {
+				agent: { suspend, resumeData: undefined },
+			} as never);
+
+			expect(suspend).toHaveBeenCalled();
+			expect(context.workflowService.archive).not.toHaveBeenCalled();
+			expect(context.workflowService.delete).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('publish action', () => {

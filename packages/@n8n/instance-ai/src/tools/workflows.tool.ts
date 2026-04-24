@@ -36,7 +36,16 @@ const getAsCodeAction = z.object({
 });
 
 const deleteAction = z.object({
-	action: z.literal('delete').describe('Archive a workflow by ID (soft delete)'),
+	action: z
+		.literal('delete')
+		.describe(
+			'Delete a workflow by ID. Use this to clean up workflows you created in this run that ' +
+				'are no longer needed — e.g. an earlier build that was superseded by a replan, an ' +
+				'intermediate setup/chunk workflow, or a partial create after a later step failed. ' +
+				'Workflows the agent created in this run are hard-deleted without a confirmation ' +
+				'prompt. Pre-existing user workflows are archived (soft delete) and still require ' +
+				'explicit user approval.',
+		),
 	workflowId: z.string().describe('ID of the workflow'),
 });
 
@@ -211,9 +220,13 @@ async function handleDelete(
 		return { success: false, denied: true, reason: 'Action blocked by admin' };
 	}
 
-	const needsApproval = context.permissions?.deleteWorkflow !== 'always_allow';
+	// Workflows the agent created during this run are cleaned up without a
+	// confirmation prompt — asking the user to approve deletion of the agent's
+	// own intermediate artifacts adds friction without safety benefit.
+	const isAgentCreated = context.aiCreatedWorkflowIds?.has(input.workflowId) ?? false;
+	const needsApproval = !isAgentCreated && context.permissions?.deleteWorkflow !== 'always_allow';
 
-	// First call — suspend for confirmation (unless always_allow)
+	// First call — suspend for confirmation (unless always_allow or agent-created)
 	if (needsApproval && (resumeData === undefined || resumeData === null)) {
 		const workflowName = await resolveWorkflowName(context, input.workflowId);
 		await suspend?.({
@@ -230,8 +243,15 @@ async function handleDelete(
 		return { success: false, denied: true, reason: 'User denied the action' };
 	}
 
-	// Approved or always_allow — execute
-	await context.workflowService.archive(input.workflowId);
+	// Agent-created workflows are hard-deleted so they don't accumulate in the
+	// user's archive as orphans. User-authored workflows are archived (soft
+	// delete) so the user can still recover them.
+	if (isAgentCreated) {
+		await context.workflowService.delete(input.workflowId);
+		context.aiCreatedWorkflowIds?.delete(input.workflowId);
+	} else {
+		await context.workflowService.archive(input.workflowId);
+	}
 	return { success: true };
 }
 

@@ -532,6 +532,13 @@ export interface InstanceAiContext {
 	/** Current run ID — used for transient (allow_once) domain approvals. */
 	runId?: string;
 	/**
+	 * IDs of workflows the agent has created during this context's lifetime.
+	 * Populated by build-workflow and submit-workflow; consumed by the delete
+	 * handler to skip the confirmation gate when the agent cleans up its own
+	 * artifacts. Lazily initialized on first create.
+	 */
+	aiCreatedWorkflowIds?: Set<string>;
+	/**
 	 * Attachments from the current user message. Runtime-only — not persisted.
 	 * Used to register `parse-file` and supply data to the parser.
 	 */

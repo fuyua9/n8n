@@ -181,6 +181,7 @@ export function createBuildWorkflowTool(context: InstanceAiContext) {
 					};
 				} else {
 					const created = await context.workflowService.createFromWorkflowJSON(json, opts);
+					(context.aiCreatedWorkflowIds ??= new Set<string>()).add(created.id);
 					return {
 						success: true,
 						workflowId: created.id,

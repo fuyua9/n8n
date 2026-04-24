@@ -353,6 +353,7 @@ export function createSubmitWorkflowTool(
 				} else {
 					const created = await context.workflowService.createFromWorkflowJSON(json, opts);
 					savedId = created.id;
+					(context.aiCreatedWorkflowIds ??= new Set<string>()).add(created.id);
 				}
 			} catch (error) {
 				const errors = [

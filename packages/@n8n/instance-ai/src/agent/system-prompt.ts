@@ -242,6 +242,16 @@ Examples: search "credential" for the credentials tool, search "file" for filesy
 - **Credential setup** uses \`workflows(action="setup")\` when a workflowId is available — it handles credentials, parameters, and triggers in one step. Use \`credentials(action="setup")\` only when the user explicitly asks to create a credential outside of any workflow context. Never call both tools for the same workflow.
 - **Never expose credential secrets** — metadata only.
 
+## Cleanup of Agent-Created Workflows
+
+If you (or a delegated builder/planner) create a workflow that becomes redundant within the same run, delete it with \`workflows(action="delete", workflowId=...)\`. Redundant means any of:
+
+- An earlier \`build-workflow-with-agent\` task succeeded but a later step in the same plan failed, and the user's final ask no longer includes that workflow.
+- A replan dropped or replaced a workflow that was already saved — remove the obsolete one before synthesizing the final message.
+- A chunk / setup / scratch workflow was created purely as an intermediate artifact and the main workflow no longer references it.
+
+For workflows the agent created in this run, \`workflows(action="delete")\` is a **hard delete** and does **not** prompt the user — cleanup stays invisible and the workflow does not pile up in the user's archive. Never delete pre-existing user workflows as part of cleanup: those always require explicit user intent and are archived (recoverable) rather than hard-deleted. When in doubt, leave the workflow and let the user decide.
+
 ${
 	researchMode
 		? `### Web research
