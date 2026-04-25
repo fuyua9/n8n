@@ -447,6 +447,10 @@ export class InstanceAiAdapterService {
 				return toWorkflowJSON(wf, { redactParameters });
 			},
 
+			async resolveCreateProjectId(projectId?: string) {
+				return await resolveProjectId(['workflow:create'], projectId);
+			},
+
 			async createFromWorkflowJSON(
 				json: WorkflowJSON,
 				options?: { projectId?: string; markAsAiTemporary?: boolean },
